@@ -1,0 +1,9 @@
+github.com/lib/pq                   72d960fe96ac86dfd376b0de7ca81c0334838d0b
+github.com/Sirupsen/logrus          v0.6.4
+
+# Test
+github.com/satori/go.uuid           242673bbc820e051ef00033e274d32e08ece9e15
+
+# Release
+github.com/mitchellh/gox            v0.3.0
+golang.org/x/tools/cmd/vet
