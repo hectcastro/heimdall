@@ -7,5 +7,7 @@ heimdall:
   build: .
   links:
     - db
+  volumes:
+    - pkg:/go/src/github.com/hectcastro/heimdall/pkg
   environment:
     - DATABASE_URL=postgres://postgres@db/postgres?sslmode=disable

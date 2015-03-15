@@ -23,7 +23,6 @@ _testmain.go
 *.test
 *.prof
 
-heimdall_darwin_amd64
-heimdall_linux_amd64
+pkg/
 
 gpm
