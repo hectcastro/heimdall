@@ -21,7 +21,7 @@ release:
 	@tar cvzf pkg/darwin_amd64/heimdall.tar.gz pkg/darwin_amd64/heimdall
 	@tar cvzf pkg/linux_amd64/heimdall.tar.gz pkg/linux_amd64/heimdall
 
-github-release:
+github-release: release
 	@github-release release \
 		--user hectcastro \
 		--repo heimdall \
