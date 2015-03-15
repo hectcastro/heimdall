@@ -47,6 +47,6 @@ gpm:
 
 ci:
 	@docker-compose build heimdall
-	@docker-compose run --rm heimdall make test
+	@docker-compose run --rm heimdall sh -c 'sleep 1 && make test'
 
 .PHONY: all test deps release clean ci github-release
