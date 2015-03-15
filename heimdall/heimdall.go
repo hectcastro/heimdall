@@ -1,3 +1,5 @@
+// Package heimdall manages the aquisition of a lock from PostgreSQL
+// via the `pg_try_advisory_lock(int, int)` function.
 package heimdall
 
 import (
@@ -10,12 +12,15 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// Lock represents the components of a `pg_try_advisory_lock` lock.
 type Lock struct {
 	Database  *sql.DB
 	Namespace int32
 	Name      int32
 }
 
+// New establishes a connection to the PostgreSQL database with a
+// connection string and creates a Lock.
 func New(database, namespace, name string) (lock *Lock, err error) {
 	db, err := sql.Open("postgres", database)
 	if err != nil {
@@ -30,6 +35,8 @@ func New(database, namespace, name string) (lock *Lock, err error) {
 
 }
 
+// Acquire attempts to acquire a lock from PostgreSQL using
+// `pg_try_advisory_lock`.
 func (l *Lock) Acquire() (lockStatus bool, err error) {
 	var lockAcquired bool
 
@@ -50,10 +57,14 @@ func (l *Lock) Acquire() (lockStatus bool, err error) {
 	return lockAcquired, nil
 }
 
+// Release closes the connection to the database, which releases the
+// lock.
 func (l *Lock) Release() {
 	l.Database.Close()
 }
 
+// encode takes a string as input and converts it to a 32-bit integer
+// using the Fowler–Noll–Vo hash function.
 func encode(input string) int32 {
 	log.Debug(fmt.Sprintf("Before encoding: %v", input))
 

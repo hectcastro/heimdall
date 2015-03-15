@@ -1,10 +1,14 @@
-# heimdall [![Build status](https://badge.buildkite.com/e463e0025085e1bee26f882776ba890416547d9f8c71c51ef3.svg?branch=develop)](https://buildkite.com/trading-fish/heimdall)
+# heimdall
+
+[![BuildKite](https://badge.buildkite.com/e463e0025085e1bee26f882776ba890416547d9f8c71c51ef3.svg?branch=develop)](https://buildkite.com/trading-fish/heimdall)
+[![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/hectcastro/heimdall)
+[![Apache V2 License](http://img.shields.io/badge/license-Apache%20V2-blue.svg)](https://github.com/hectcastro/heimdall/blob/develop/LICENSE)
 
 This is an experimental program that wraps an executable program inside of an exclusive lock provided by PostgreSQL's `pg_try_advisory_lock`.
 
 `pg_try_advisory_lock` is a sibling of `pg_advisory_lock`, which is a locking function with two signatures. One accepts a 64-bit integer, and the other accepts 2 32-bit integers. The main difference between `pg_advisory_lock` and `pg_try_advisory_lock` is that `pg_try_advisory_lock` does not wait until a lock becomes available. Instead, `pg_try_advisory_lock` returns immediately with a `t` if it successfully acquired the lock, and `f` if it was unable to acquire it.
 
-One last behiavor that is important to note: if the connection to PostgreSQL is severed, any lock acquired via `pg_try_advisory_lock` is automatically released.
+One last behavior that is important to note: if the connection to PostgreSQL is severed, any lock acquired via `pg_try_advisory_lock` is automatically released.
 
 ## Usage
 
@@ -29,6 +33,8 @@ $ heimdall \
 
 A quick way to test an exclusive lock is to use `sleep` as the command. Executing `heimdall` once with `sleep 10` and then immediately with another command in another shell should prevent the second command from executing.
 
+### Quick
+
 Induce a deep sleep:
 
 ```bash
@@ -47,6 +53,29 @@ $ heimdall \
     --namespace joker \
     --name test \
     date
+```
+
+There are two ways to run the built-in test suite. One is intended to be run
+locally, while the other is setup to run within a Docker container.
+
+### Local Test Suite
+
+The local tests require a PostgreSQL database connection fed to the test suite
+as a connection string via the `DATABASE_URL` environment variable:
+
+```bash
+$ make deps
+$ DATABASE_URL="postgres://hector@localhost/hector?sslmode=disable" make test
+```
+
+### Docker Test Suite
+
+The Docker set includes a PostgreSQL container that gets linked to the container
+running the test suite. Ensure that [`docker-compose`](https://docs.docker.com/compose/)
+is installed before attempting to use this setup.
+
+```bash
+$ make ci
 ```
 
 ## Attribution

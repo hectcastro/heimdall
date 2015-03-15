@@ -16,6 +16,7 @@ import (
 	"github.com/hectcastro/heimdall/heimdall"
 )
 
+// Default values for the command line interface.
 const (
 	DEFAULT_DATABASE_URL   = "postgres://postgres@localhost/postgres?sslmode=disable"
 	DEFAULT_LOCK_NAME      = "heimdall"
@@ -82,6 +83,9 @@ func main() {
 	}
 }
 
+// Run executes a program and returns its exit status. Its
+// arguments are a program, an array of arguments to that
+// program, and a timeout.
 func Run(program string, args []string, timeout int) int {
 	var exitStatus int
 	var cmdOut, cmdErr bytes.Buffer
@@ -127,6 +131,9 @@ func Run(program string, args []string, timeout int) int {
 	return exitStatus
 }
 
+// timeoutDuration converts its integer argument into a
+// time.Duration. If 0 is passes as the timeout, the duration
+// becomes the maximum integer value (simulating infinity).
 func timeoutDuration(timeout int) time.Duration {
 	if timeout == 0 {
 		// Maximum integer timeout
@@ -136,12 +143,16 @@ func timeoutDuration(timeout int) time.Duration {
 	}
 }
 
+// exitError is a convenience function for printing an error
+// message to Stderr and returning 1 as the program's exit status.
 func exitError(err error) {
 	fmt.Fprint(os.Stderr, err)
 
 	os.Exit(1)
 }
 
+// usage returns the usage text for this program's command line
+// interface.
 func usage() string {
 	helpText := `
 Usage: heimdall [options] PROGRAM
