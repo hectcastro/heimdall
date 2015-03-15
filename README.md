@@ -1,7 +1,7 @@
 # heimdall
 
 [![BuildKite](https://badge.buildkite.com/e463e0025085e1bee26f882776ba890416547d9f8c71c51ef3.svg?branch=develop)](https://buildkite.com/trading-fish/heimdall)
-[![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/hectcastro/heimdall)
+[![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/hectcastro/heimdall/heimdall)
 [![Apache V2 License](http://img.shields.io/badge/license-Apache%20V2-blue.svg)](https://github.com/hectcastro/heimdall/blob/develop/LICENSE)
 
 This is an experimental program that wraps an executable program inside of an exclusive lock provided by PostgreSQL's `pg_try_advisory_lock`.
