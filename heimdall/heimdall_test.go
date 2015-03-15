@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 func TestAcquire(t *testing.T) {
@@ -17,7 +17,7 @@ func TestAcquire(t *testing.T) {
 	lockAcquired := lock.Acquire()
 	defer lock.Release()
 
-	if lockAcquired {
+	if !lockAcquired {
 		t.Errorf("Unable to acquire lock")
 	}
 }
@@ -44,7 +44,7 @@ func TestLockContention(t *testing.T) {
 		secondLock := New(databaseUrl, namespace, name)
 		defer secondLock.Release()
 
-		if !secondLock.Acquire() {
+		if secondLock.Acquire() {
 			t.Errorf("Second lock acquired before first released")
 		}
 	}

@@ -18,4 +18,7 @@ gpm:
 	@wget -q https://raw.githubusercontent.com/pote/gpm/v1.3.2/bin/gpm
 	@chmod +x gpm
 
-.PHONY: all test deps release clean
+ci:
+	@docker-compose run heimdall make test
+
+.PHONY: all test deps release clean ci

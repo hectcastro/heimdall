@@ -1,0 +1,11 @@
+db:
+  image: postgres:9.3
+  ports:
+    - "5432"
+
+heimdall:
+  build: .
+  links:
+    - db
+  environment:
+    - DATABASE_URL=postgres://postgres@db/postgres?sslmode=disable

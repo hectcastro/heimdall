@@ -1,4 +1,4 @@
-# heimdall [![Build Status](https://travis-ci.org/hectcastro/heimdall.svg?branch=develop)](https://travis-ci.org/hectcastro/heimdall)
+# heimdall [![Build status](https://badge.buildkite.com/e463e0025085e1bee26f882776ba890416547d9f8c71c51ef3.svg?branch=develop)](https://buildkite.com/trading-fish/heimdall)
 
 This is an experimental program that wraps an executable program inside of an exclusive lock provided by PostgreSQL's `pg_try_advisory_lock`.
 
