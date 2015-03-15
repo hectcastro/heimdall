@@ -19,6 +19,7 @@ gpm:
 	@chmod +x gpm
 
 ci:
+	@docker-compose build heimdall
 	@docker-compose run heimdall make test
 
 .PHONY: all test deps release clean ci

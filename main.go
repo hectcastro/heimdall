@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"syscall"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/hectcastro/heimdall/heimdall"
@@ -18,21 +20,24 @@ const (
 	DEFAULT_DATABASE_URL   = "postgres://postgres@localhost/postgres?sslmode=disable"
 	DEFAULT_LOCK_NAME      = "heimdall"
 	DEFUALT_LOCK_NAMESPACE = "heimdall"
+	DEFAULT_LOCK_TIMEOUT   = 5
 )
 
 func main() {
 	var debug bool
 	var database, namespace, name string
+	var timeout int
 
 	if os.Getenv("GOMAXPROCS") == "" {
 		runtime.GOMAXPROCS(runtime.NumCPU())
 	}
 
-	flag.Usage = func() { fmt.Print(Usage()) }
+	flag.Usage = func() { fmt.Print(usage()) }
 	flag.BoolVar(&debug, "debug", false, "Debug mode enabled")
 	flag.StringVar(&database, "database", DEFAULT_DATABASE_URL, "A database URL")
 	flag.StringVar(&namespace, "namespace", DEFUALT_LOCK_NAMESPACE, "A lock namespace")
 	flag.StringVar(&name, "name", DEFAULT_LOCK_NAME, "A lock name")
+	flag.IntVar(&timeout, "timeout", DEFAULT_LOCK_TIMEOUT, "A lock timeout")
 	flag.Parse()
 
 	args := flag.Args()
@@ -42,7 +47,7 @@ func main() {
 	}
 
 	if len(args) == 0 {
-		log.Fatal("You must supply a program to run")
+		exitError(errors.New("heimdall: you must supply a program to run"))
 	}
 
 	program := args[0]
@@ -51,18 +56,25 @@ func main() {
 	log.Debug(fmt.Sprintf("Database: %v", database))
 	log.Debug(fmt.Sprintf("Namespace: %v", namespace))
 	log.Debug(fmt.Sprintf("Name: %v", name))
+	log.Debug(fmt.Sprintf("Timeout: %v", timeout))
 	log.Debug(fmt.Sprintf("Program: %v", program))
 	log.Debug(fmt.Sprintf("Program arguments: %v", programArgs))
 
-	lock := heimdall.New(database, namespace, name)
+	lock, err := heimdall.New(database, namespace, name)
+	if err != nil {
+		exitError(err)
+	}
 
-	lockAcquired := lock.Acquire()
+	lockAcquired, err := lock.Acquire()
+	if err != nil {
+		exitError(err)
+	}
 	defer lock.Release()
 
 	if lockAcquired {
 		log.Debug("Lock was acquired")
 
-		os.Exit(Run(program, programArgs))
+		os.Exit(Run(program, programArgs, timeout))
 	} else {
 		log.Debug("Lock was not acquired")
 
@@ -70,32 +82,67 @@ func main() {
 	}
 }
 
-func Run(program string, args []string) int {
-	var waitStatus syscall.WaitStatus
+func Run(program string, args []string, timeout int) int {
+	var exitStatus int
 	var cmdOut, cmdErr bytes.Buffer
 
 	cmd := exec.Command(program, args...)
 	cmd.Stdout = &cmdOut
 	cmd.Stderr = &cmdErr
 
-	if err := cmd.Run(); err != nil {
-		if exitError, ok := err.(*exec.ExitError); ok {
-			waitStatus = exitError.Sys().(syscall.WaitStatus)
-		} else {
-			return 1
-		}
+	if err := cmd.Start(); err != nil {
+		exitError(err)
+	}
 
-		fmt.Fprint(os.Stderr, cmdErr.String())
-	} else {
-		waitStatus = cmd.ProcessState.Sys().(syscall.WaitStatus)
+	done := make(chan error, 1)
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			if exitError, ok := err.(*exec.ExitError); ok {
+				// The command's failure exit status
+				exitStatus = exitError.Sys().(syscall.WaitStatus).ExitStatus()
+			} else {
+				exitStatus = 1
+			}
+			fmt.Fprint(os.Stderr, cmdErr.String())
+		} else {
+			// The command's successful exit status
+			exitStatus = cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
+		}
+	case <-time.After(timeoutDuration(timeout)):
+		cmd.Process.Kill()
+		<-done
+
+		log.Debug("Process killed due to timeout")
+
+		exitStatus = 1
 	}
 
 	fmt.Fprint(os.Stdout, cmdOut.String())
 
-	return waitStatus.ExitStatus()
+	return exitStatus
 }
 
-func Usage() string {
+func timeoutDuration(timeout int) time.Duration {
+	if timeout == 0 {
+		// Maximum integer timeout
+		return time.Duration(int(^uint(timeout) >> 1))
+	} else {
+		return time.Duration(timeout) * time.Second
+	}
+}
+
+func exitError(err error) {
+	fmt.Fprint(os.Stderr, err)
+
+	os.Exit(1)
+}
+
+func usage() string {
 	helpText := `
 Usage: heimdall [options] PROGRAM
 
@@ -107,6 +154,7 @@ Options:
   --database                   A database URL
   --namespace                  A lock namespace
   --name                       A lock name
+  --timeout                    A lock timeout
 `
 
 	return strings.TrimSpace(helpText)

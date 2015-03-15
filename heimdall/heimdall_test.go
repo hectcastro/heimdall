@@ -12,10 +12,16 @@ func TestAcquire(t *testing.T) {
 	namespace := uuid.NewV4().String()
 	name := uuid.NewV4().String()
 
-	lock := New(databaseUrl, namespace, name)
-
-	lockAcquired := lock.Acquire()
+	lock, err := New(databaseUrl, namespace, name)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 	defer lock.Release()
+
+	lockAcquired, err := lock.Acquire()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 
 	if !lockAcquired {
 		t.Errorf("Unable to acquire lock")
@@ -37,14 +43,30 @@ func TestLockContention(t *testing.T) {
 	namespace := uuid.NewV4().String()
 	name := uuid.NewV4().String()
 
-	lock := New(databaseUrl, namespace, name)
+	lock, err := New(databaseUrl, namespace, name)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 	defer lock.Release()
 
-	if lock.Acquire() {
-		secondLock := New(databaseUrl, namespace, name)
+	lockAcquired, err := lock.Acquire()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	if lockAcquired {
+		secondLock, err := New(databaseUrl, namespace, name)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
 		defer secondLock.Release()
 
-		if secondLock.Acquire() {
+		secondLockAcquired, err := secondLock.Acquire()
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+
+		if secondLockAcquired {
 			t.Errorf("Second lock acquired before first released")
 		}
 	}

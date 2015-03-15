@@ -2,6 +2,7 @@ package heimdall
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"hash/fnv"
 
@@ -15,41 +16,38 @@ type Lock struct {
 	Name      int32
 }
 
-func New(database, namespace, name string) *Lock {
+func New(database, namespace, name string) (lock *Lock, err error) {
 	db, err := sql.Open("postgres", database)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Unable to establish a database connection"))
+		err = errors.New("heimdall: unable to establish database connection")
 	}
 
 	return &Lock{
 		Database:  db,
 		Namespace: encode(namespace),
 		Name:      encode(name),
-	}
+	}, err
+
 }
 
-func (l *Lock) Acquire() bool {
+func (l *Lock) Acquire() (lockStatus bool, err error) {
 	var lockAcquired bool
 
 	rows, err := l.Database.Query("SELECT pg_try_advisory_lock($1,$2)", l.Namespace, l.Name)
 	if err != nil {
-		log.Debug(fmt.Sprintf("Unable to execute query for advisory lock"))
-
-		return false
+		return false, errors.New("heimdall: unable to execute query for advisory lock")
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		if err := rows.Scan(&lockAcquired); err != nil {
-			log.Debug(fmt.Sprintf("Unable to scan query results"))
-
-			return false
+			return false, errors.New("heimdall: unable to scan query results")
 		}
 	}
 
 	log.Debug(fmt.Sprintf("Lock acquired?: %v", lockAcquired))
 
-	return lockAcquired
+	return lockAcquired, nil
 }
 
 func (l *Lock) Release() {
