@@ -1,0 +1,26 @@
+language: go
+
+sudo: false
+
+env:
+  global:
+    - DATABASE_URL="postgres://postgres@localhost/travis_ci_test?sslmode=disable"
+
+addons:
+  postgresql: 9.4
+
+go:
+  - 1.4
+  - tip
+
+install: make deps
+
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
+
+script: make test
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - go: tip
