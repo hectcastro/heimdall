@@ -24,3 +24,14 @@ matrix:
   fast_finish: true
   allow_failures:
     - go: tip
+
+deploy:
+  provider: releases
+  api_key:
+    secure: jFZ4bY+/TGewdTr/ThOUb9OqCQs7ztlfEdTcy81l78X9US7pBxdyL7cyBAZCTRT2FAazQVzGGkAAQU3CxBvDblFahEZ3pzDLfo9cM5bNd1oWKKvVl7xleflsLbejSFVTFTJdHB1/j+vSPElmyZGLP9J83m4WQYhbebSj02cIbkw=
+  file:
+    - pkg/darwin_amd64/heimdall.tar.gz
+    - pkg/linux_amd64/heimdall.tar.gz
+  skip_cleanup: true
+  on:
+    repo: hectcastro/heimdall
