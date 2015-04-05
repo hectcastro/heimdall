@@ -1,6 +1,7 @@
 package heimdall
 
 import (
+	"net/url"
 	"os"
 	"testing"
 
@@ -69,5 +70,34 @@ func TestLockContention(t *testing.T) {
 		if secondLockAcquired {
 			t.Errorf("Second lock acquired before first released")
 		}
+	}
+}
+
+func TestLibPqEnvironment(t *testing.T) {
+	namespace := uuid.NewV4().String()
+	name := uuid.NewV4().String()
+
+	dbUrl, _ := url.Parse(os.Getenv("DATABASE_URL"))
+
+	os.Setenv("PGHOST", dbUrl.Host)
+	os.Setenv("PGUSER", dbUrl.User.Username())
+	os.Setenv("PGDATABASE", dbUrl.Path[1:len(dbUrl.Path)])
+
+	params, _ := url.ParseQuery(dbUrl.RawQuery)
+	os.Setenv("PGSSLMODE", params["sslmode"][0])
+
+	lock, err := New("", namespace, name)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	defer lock.Release()
+
+	lockAcquired, err := lock.Acquire()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	if !lockAcquired {
+		t.Errorf("Unable to acquire lock")
 	}
 }

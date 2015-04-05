@@ -18,7 +18,7 @@ import (
 
 // Default values for the command line interface.
 const (
-	DEFAULT_DATABASE_URL   = "postgres://postgres@localhost/postgres?sslmode=disable"
+	DEFAULT_DATABASE_URL   = ""
 	DEFAULT_LOCK_NAME      = "heimdall"
 	DEFUALT_LOCK_NAMESPACE = "heimdall"
 	DEFAULT_LOCK_TIMEOUT   = 5
