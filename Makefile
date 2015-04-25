@@ -26,8 +26,8 @@ release: godep gox-bootstrap
 	${GOPATH}/bin/godep restore
 	${GOPATH}/bin/gox $(GOX_FLAGS) -ldflags "$(LDFLAGS)" $(PACKAGE)
 
-	tar cvzf pkg/darwin_amd64/heimdall.tar.gz pkg/darwin_amd64/heimdall
-	tar cvzf pkg/linux_amd64/heimdall.tar.gz pkg/linux_amd64/heimdall
+	tar -C pkg/darwin_amd64 -cvzf pkg/darwin_amd64_heimdall.tar.gz heimdall
+	tar -C pkg/linux_amd64 -cvzf pkg/linux_amd64_heimdall.tar.gz heimdall
 
 
 # Gox
