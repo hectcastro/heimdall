@@ -23,7 +23,7 @@ matrix:
   allow_failures:
     - go: tip
 
-before_deploy: GOPATH=$HOME/gopath make gox-bootstrap
+before_deploy: GOPATH=$HOME/gopath make release
 
 deploy:
   provider: releases
@@ -35,3 +35,4 @@ deploy:
   skip_cleanup: true
   on:
     repo: hectcastro/heimdall
+    tags: true
