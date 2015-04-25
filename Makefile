@@ -22,7 +22,8 @@ vendor: godep
 	rm -rf Godep
 	${GOPATH}/bin/godep save ./...
 
-release: vendor gox-bootstrap
+release: godep gox-bootstrap
+	${GOPATH}/bin/godep restore
 	${GOPATH}/bin/gox $(GOX_FLAGS) -ldflags "$(LDFLAGS)" $(PACKAGE)
 
 	tar cvzf pkg/darwin_amd64/heimdall.tar.gz pkg/darwin_amd64/heimdall
