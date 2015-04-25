@@ -1,4 +1,4 @@
-## 0.2.1-0.2.2
+## 0.2.1-0.2.3
 
 - Automatically add tagged versions to GitHub Releases.
 - No Heimdall source code was modified in the release range above.
