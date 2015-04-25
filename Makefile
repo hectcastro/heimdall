@@ -1,42 +1,63 @@
-PACKAGE := github.com/hectcastro/heimdall
-
-GPM_VERSION := v1.3.2
-GPM_URL := https://raw.githubusercontent.com/pote/gpm/$(GPM_VERSION)/bin/gpm
+PACKAGE = github.com/hectcastro/heimdall
+VERSION = '$(shell git describe --tags --always --dirty)'
+GOVERSION = '$(shell go version)'
+BUILDTIME = '$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")'
+LDFLAGS = -X main.version $(VERSION) -X main.goVersion $(GOVERSION) -X main.buildTime $(BUILDTIME)
 
 GOX_OSARCH ?= linux/amd64 darwin/amd64
 GOX_FLAGS ?= -output="pkg/{{.OS}}_{{.Arch}}/heimdall" -osarch="$(GOX_OSARCH)"
 
-all: test
+all: test install
+
+install: godep
+	${GOPATH}/bin/godep go install -ldflags "$(LDFLAGS)" ./...
 
 clean:
-	rm -rf pkg/ gpm
+	rm -rf pkg/
 
-test:
-	@go test ./... -timeout=30s -parallel=4
-	@go tool vet .
+test: godep
+	${GOPATH}/bin/godep go test -v ./... -timeout=30s -parallel=4
+
+vendor: godep
+	rm -rf Godep
+	${GOPATH}/bin/godep save ./...
+
+release: vendor gox-bootstrap
+	${GOPATH}/bin/gox $(GOX_FLAGS) -ldflags "$(LDFLAGS)" $(PACKAGE)
+
+	tar cvzf pkg/darwin_amd64/heimdall.tar.gz pkg/darwin_amd64/heimdall
+	tar cvzf pkg/linux_amd64/heimdall.tar.gz pkg/linux_amd64/heimdall
+
+
+# Gox
+
+gox: ${GOPATH}/bin/gox
+
+${GOPATH}/bin/gox:
+	go get -u github.com/mitchellh/gox
+	go install github.com/mitchellh/gox
+
+gox-bootstrap: gox
+	${GOPATH}/bin/gox -build-toolchain -osarch="$(GOX_OSARCH)"
+
+
+# Godep
+
+godep: ${GOPATH}/bin/godep
+
+${GOPATH}/bin/godep:
+	go get -u github.com/tools/godep
+	go install github.com/tools/godep
+
+
+# Docker
 
 docker-test:
 	@docker-compose build heimdall
 	@docker-compose run --rm heimdall sh -c 'sleep 1 && make test'
 
-gpm:
-	@wget -qN $(GPM_URL)
-	@chmod +x $@
-
-deps: gpm
-	@./gpm install
-
-gox-bootstrap:
-	@gox -build-toolchain -osarch="$(GOX_OSARCH)"
-
-release: deps gox-bootstrap
-	@gox $(GOX_FLAGS) $(PACKAGE)
-
-	@tar cvzf pkg/darwin_amd64/heimdall.tar.gz pkg/darwin_amd64/heimdall
-	@tar cvzf pkg/linux_amd64/heimdall.tar.gz pkg/linux_amd64/heimdall
-
 docker-release:
 	@docker-compose build heimdall
-	@docker-compose run --rm heimdall gox $(GOX_FLAGS) $(PACKAGE)
+	@docker-compose run --rm heimdall sh -c 'godep restore && make gox && gox $(GOX_FLAGS) $(PACKAGE)'
 
-.PHONY: all clean test docker-test gpm deps gox-bootstrap release docker-release
+.PHONY: all clean test godep vendor gox gox-bootstrap release docker-test docker-release

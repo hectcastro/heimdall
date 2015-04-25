@@ -73,7 +73,6 @@ The local tests require a PostgreSQL database connection fed to the test suite
 as a connection string via the `DATABASE_URL` environment variable:
 
 ```bash
-$ make deps
 $ DATABASE_URL="postgres://hector@localhost/hector?sslmode=disable" make test
 ```
 
