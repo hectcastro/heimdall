@@ -1,55 +1,20 @@
 PACKAGE = github.com/hectcastro/heimdall
-VERSION = '$(shell git describe --tags --always --dirty)'
-GOVERSION = '$(shell go version)'
-BUILDTIME = '$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")'
-LDFLAGS = -X main.version $(VERSION) -X main.goVersion $(GOVERSION) -X main.buildTime $(BUILDTIME)
-
-GOX_OSARCH ?= linux/amd64 darwin/amd64
+GOX_OSARCH ?= linux/amd64
 GOX_FLAGS ?= -output="pkg/{{.OS}}_{{.Arch}}/heimdall" -osarch="$(GOX_OSARCH)"
 
 all: test install
 
-install: godep
-	${GOPATH}/bin/godep go install -ldflags "$(LDFLAGS)" ./...
+install:
+	$(GOPATH)/bin/godep go install $(shell go list ./... | grep -v /vendor/)
 
-clean:
-	rm -rf pkg/
+test:
+	$(GOPATH)/bin/godep go test -v $(shell go list ./... | grep -v /vendor/) -timeout=30s -parallel=4
 
-test: godep
-	${GOPATH}/bin/godep go test -v ./... -timeout=30s -parallel=4
+release:
+	$(GOPATH)/bin/godep restore
+	$(GOPATH)/bin/gox $(GOX_FLAGS) $(PACKAGE)
 
-vendor: godep
-	rm -rf Godep
-	${GOPATH}/bin/godep save ./...
-
-release: godep gox-bootstrap
-	${GOPATH}/bin/godep restore
-	${GOPATH}/bin/gox $(GOX_FLAGS) -ldflags "$(LDFLAGS)" $(PACKAGE)
-
-	tar -C pkg/darwin_amd64 -cvzf pkg/darwin_amd64_heimdall.tar.gz heimdall
 	tar -C pkg/linux_amd64 -cvzf pkg/linux_amd64_heimdall.tar.gz heimdall
-
-
-# Gox
-
-gox: ${GOPATH}/bin/gox
-
-${GOPATH}/bin/gox:
-	go get -u github.com/mitchellh/gox
-	go install github.com/mitchellh/gox
-
-gox-bootstrap: gox
-	${GOPATH}/bin/gox -build-toolchain -osarch="$(GOX_OSARCH)"
-
-
-# Godep
-
-godep: ${GOPATH}/bin/godep
-
-${GOPATH}/bin/godep:
-	go get -u github.com/tools/godep
-	go install github.com/tools/godep
-
 
 # Docker
 
@@ -59,6 +24,6 @@ docker-test:
 
 docker-release:
 	@docker-compose build heimdall
-	@docker-compose run --rm heimdall sh -c 'godep restore && make gox && gox $(GOX_FLAGS) $(PACKAGE)'
+	@docker-compose run --rm heimdall sh -c 'godep restore && make release'
 
-.PHONY: all clean test godep vendor gox gox-bootstrap release docker-test docker-release
+.PHONY: all test release docker-test docker-release

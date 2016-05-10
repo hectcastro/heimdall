@@ -1,13 +1,13 @@
-db:
-  image: postgres:9.3
-  ports:
-    - "5432"
+version: '2'
+services:
+  db:
+    image: postgres:9.5
 
-heimdall:
-  build: .
-  links:
-    - db
-  volumes:
-    - pkg:/go/src/github.com/hectcastro/heimdall/pkg
-  environment:
-    - DATABASE_URL=postgres://postgres@db/postgres?sslmode=disable
+  heimdall:
+    build: .
+    links:
+      - db:database.heimdall.internal
+    volumes:
+        - .:/go/src/github.com/hectcastro/heimdall
+    environment:
+      DATABASE_URL: "postgres://postgres@database.heimdall.internal/postgres?sslmode=disable"

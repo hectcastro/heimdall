@@ -10,13 +10,13 @@ addons:
   postgresql: 9.4
 
 go:
-  - 1.4
+  - 1.6
   - tip
 
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
 
-script: go test -v ./...
+script: go test -v $(go list ./... | grep -v /vendor/)
 
 matrix:
   fast_finish: true
@@ -30,7 +30,6 @@ deploy:
   api_key:
     secure: jFZ4bY+/TGewdTr/ThOUb9OqCQs7ztlfEdTcy81l78X9US7pBxdyL7cyBAZCTRT2FAazQVzGGkAAQU3CxBvDblFahEZ3pzDLfo9cM5bNd1oWKKvVl7xleflsLbejSFVTFTJdHB1/j+vSPElmyZGLP9J83m4WQYhbebSj02cIbkw=
   file:
-    - pkg/darwin_amd64_heimdall.tar.gz
     - pkg/linux_amd64_heimdall.tar.gz
   skip_cleanup: true
   on:
