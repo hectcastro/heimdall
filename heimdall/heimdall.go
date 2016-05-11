@@ -1,4 +1,4 @@
-// Package heimdall manages the aquisition of a lock from PostgreSQL
+// Package heimdall manages the acquisition of a lock from PostgreSQL
 // via the `pg_try_advisory_lock(int, int)` function.
 package heimdall
 
