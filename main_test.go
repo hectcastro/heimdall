@@ -5,7 +5,7 @@ import (
 )
 
 func TestRunningProgram(t *testing.T) {
-	exitStatus := Run("true", []string{}, DEFAULT_LOCK_TIMEOUT)
+	exitStatus := Run("true", []string{}, DefaultLockTimeout)
 
 	if exitStatus != 0 {
 		t.Errorf("Running `true` failed")
@@ -13,7 +13,7 @@ func TestRunningProgram(t *testing.T) {
 }
 
 func TestFailingProgram(t *testing.T) {
-	exitStatus := Run("false", []string{}, DEFAULT_LOCK_TIMEOUT)
+	exitStatus := Run("false", []string{}, DefaultLockTimeout)
 
 	if exitStatus != 1 {
 		t.Errorf("Running `false` didn't fail")

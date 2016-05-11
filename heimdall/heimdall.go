@@ -9,6 +9,7 @@ import (
 	"hash/fnv"
 
 	log "github.com/Sirupsen/logrus"
+	// Provides PostgreSQL database support
 	_ "github.com/lib/pq"
 )
 

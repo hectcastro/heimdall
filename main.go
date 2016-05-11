@@ -18,10 +18,10 @@ import (
 
 // Default values for the command line interface.
 const (
-	DEFAULT_DATABASE_URL   = ""
-	DEFAULT_LOCK_NAME      = "heimdall"
-	DEFUALT_LOCK_NAMESPACE = "heimdall"
-	DEFAULT_LOCK_TIMEOUT   = 5
+	DefaultDatabaseURL   = ""
+	DefaultLockName      = "heimdall"
+	DefaultLockNamespace = "heimdall"
+	DefaultLockTimeout   = 5
 )
 
 func main() {
@@ -35,10 +35,10 @@ func main() {
 
 	flag.Usage = func() { fmt.Print(usage()) }
 	flag.BoolVar(&debug, "debug", false, "Debug mode enabled")
-	flag.StringVar(&database, "database", DEFAULT_DATABASE_URL, "A database URL")
-	flag.StringVar(&namespace, "namespace", DEFUALT_LOCK_NAMESPACE, "A lock namespace")
-	flag.StringVar(&name, "name", DEFAULT_LOCK_NAME, "A lock name")
-	flag.IntVar(&timeout, "timeout", DEFAULT_LOCK_TIMEOUT, "A lock timeout")
+	flag.StringVar(&database, "database", DefaultDatabaseURL, "A database URL")
+	flag.StringVar(&namespace, "namespace", DefaultLockNamespace, "A lock namespace")
+	flag.StringVar(&name, "name", DefaultLockName, "A lock name")
+	flag.IntVar(&timeout, "timeout", DefaultLockTimeout, "A lock timeout")
 	flag.Parse()
 
 	args := flag.Args()
@@ -132,15 +132,15 @@ func Run(program string, args []string, timeout int) int {
 }
 
 // timeoutDuration converts its integer argument into a
-// time.Duration. If 0 is passes as the timeout, the duration
+// time.Duration. If 0 is passed as the timeout, the duration
 // becomes the maximum integer value (simulating infinity).
 func timeoutDuration(timeout int) time.Duration {
 	if timeout == 0 {
 		// Maximum integer timeout
 		return time.Duration(int(^uint(timeout) >> 1))
-	} else {
-		return time.Duration(timeout) * time.Second
 	}
+
+	return time.Duration(timeout) * time.Second
 }
 
 // exitError is a convenience function for printing an error

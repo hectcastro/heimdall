@@ -9,11 +9,11 @@ import (
 )
 
 func TestAcquire(t *testing.T) {
-	databaseUrl := os.Getenv("DATABASE_URL")
+	databaseURL := os.Getenv("DATABASE_URL")
 	namespace := uuid.NewV4().String()
 	name := uuid.NewV4().String()
 
-	lock, err := New(databaseUrl, namespace, name)
+	lock, err := New(databaseURL, namespace, name)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -31,20 +31,20 @@ func TestAcquire(t *testing.T) {
 
 func TestEncode(t *testing.T) {
 	for i := 0; i <= 1000; i++ {
-		lockId := encode(uuid.NewV4().String())
+		lockID := encode(uuid.NewV4().String())
 
-		if lockId < -2147483648 || lockId > 2147483647 {
+		if lockID < -2147483648 || lockID > 2147483647 {
 			t.Errorf("Lock ID is out of range")
 		}
 	}
 }
 
 func TestLockContention(t *testing.T) {
-	databaseUrl := os.Getenv("DATABASE_URL")
+	databaseURL := os.Getenv("DATABASE_URL")
 	namespace := uuid.NewV4().String()
 	name := uuid.NewV4().String()
 
-	lock, err := New(databaseUrl, namespace, name)
+	lock, err := New(databaseURL, namespace, name)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -56,7 +56,7 @@ func TestLockContention(t *testing.T) {
 	}
 
 	if lockAcquired {
-		secondLock, err := New(databaseUrl, namespace, name)
+		secondLock, err := New(databaseURL, namespace, name)
 		if err != nil {
 			t.Errorf(err.Error())
 		}
@@ -77,13 +77,13 @@ func TestLibPqEnvironment(t *testing.T) {
 	namespace := uuid.NewV4().String()
 	name := uuid.NewV4().String()
 
-	dbUrl, _ := url.Parse(os.Getenv("DATABASE_URL"))
+	dbURL, _ := url.Parse(os.Getenv("DATABASE_URL"))
 
-	os.Setenv("PGHOST", dbUrl.Host)
-	os.Setenv("PGUSER", dbUrl.User.Username())
-	os.Setenv("PGDATABASE", dbUrl.Path[1:len(dbUrl.Path)])
+	os.Setenv("PGHOST", dbURL.Host)
+	os.Setenv("PGUSER", dbURL.User.Username())
+	os.Setenv("PGDATABASE", dbURL.Path[1:len(dbURL.Path)])
 
-	params, _ := url.ParseQuery(dbUrl.RawQuery)
+	params, _ := url.ParseQuery(dbURL.RawQuery)
 	os.Setenv("PGSSLMODE", params["sslmode"][0])
 
 	lock, err := New("", namespace, name)

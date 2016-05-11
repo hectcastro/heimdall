@@ -9,6 +9,8 @@ install:
 
 test:
 	$(GOPATH)/bin/godep go test -v $(shell go list ./... | grep -v /vendor/) -timeout=30s -parallel=4
+	golint -set_exit_status .
+	golint -set_exit_status heimdall
 
 release:
 	$(GOPATH)/bin/godep restore
