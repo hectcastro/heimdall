@@ -1,11 +1,4 @@
-FROM golang:1.6
-
-RUN go get -u github.com/tools/godep \
-    && go install github.com/tools/godep \
-    && go get -u github.com/golang/lint/golint \
-    && go install github.com/golang/lint/golint \
-    && go get -u github.com/mitchellh/gox \
-    && go install github.com/mitchellh/gox
+FROM golang:1.15
 
 COPY . /go/src/github.com/hectcastro/heimdall
 

@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/hectcastro/heimdall/heimdall"
+	log "github.com/sirupsen/logrus"
 )
 
 // Default values for the command line interface.

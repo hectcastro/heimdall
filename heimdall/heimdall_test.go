@@ -5,13 +5,13 @@ import (
 	"os"
 	"testing"
 
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 )
 
 func TestAcquire(t *testing.T) {
 	databaseURL := os.Getenv("DATABASE_URL")
-	namespace := uuid.NewV4().String()
-	name := uuid.NewV4().String()
+	namespace := uuid.New().String()
+	name := uuid.New().String()
 
 	lock, err := New(databaseURL, namespace, name)
 	if err != nil {
@@ -31,7 +31,7 @@ func TestAcquire(t *testing.T) {
 
 func TestEncode(t *testing.T) {
 	for i := 0; i <= 1000; i++ {
-		lockID := encode(uuid.NewV4().String())
+		lockID := encode(uuid.New().String())
 
 		if lockID < -2147483648 || lockID > 2147483647 {
 			t.Errorf("Lock ID is out of range")
@@ -41,8 +41,8 @@ func TestEncode(t *testing.T) {
 
 func TestLockContention(t *testing.T) {
 	databaseURL := os.Getenv("DATABASE_URL")
-	namespace := uuid.NewV4().String()
-	name := uuid.NewV4().String()
+	namespace := uuid.New().String()
+	name := uuid.New().String()
 
 	lock, err := New(databaseURL, namespace, name)
 	if err != nil {
@@ -74,8 +74,8 @@ func TestLockContention(t *testing.T) {
 }
 
 func TestLibPqEnvironment(t *testing.T) {
-	namespace := uuid.NewV4().String()
-	name := uuid.NewV4().String()
+	namespace := uuid.New().String()
+	name := uuid.New().String()
 
 	dbURL, _ := url.Parse(os.Getenv("DATABASE_URL"))
 
