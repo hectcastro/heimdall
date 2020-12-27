@@ -1,33 +1,22 @@
-PACKAGE = github.com/hectcastro/heimdall
-PROJECT_PACKAGES = $(shell go list ./... | grep -v /vendor/)
-GOX_OSARCH ?= linux/amd64
-GOX_FLAGS ?= -output="pkg/{{.OS}}_{{.Arch}}/heimdall" -osarch="$(GOX_OSARCH)"
+TEST?=./...
+GOFMT_FILES?=$$(find . -type f -name '*.go')
 
-all: test install
+default: test
 
-install:
-	$(GOPATH)/bin/godep go install $(PROJECT_PACKAGES)
+test: fmtcheck
+	go list $(TEST) | xargs -t -n4 go test $(TESTARGS) -v -timeout=2m -parallel=4
 
-test:
-	golint -set_exit_status .
-	golint -set_exit_status heimdall
-	$(GOPATH)/bin/godep go vet $(PROJECT_PACKAGES)
-	$(GOPATH)/bin/godep go test -v $(PROJECT_PACKAGES) -timeout=30s -parallel=4
+cover:
+	go test $(TEST) -coverprofile=coverage.out
+	go tool cover -html=coverage.out
+	rm coverage.out
 
-release:
-	$(GOPATH)/bin/godep restore
-	$(GOPATH)/bin/gox $(GOX_FLAGS) $(PACKAGE)
+fmt:
+	gofmt -w $(GOFMT_FILES)
 
-	tar -C pkg/linux_amd64 -cvzf pkg/linux_amd64_heimdall.tar.gz heimdall
+fmtcheck:
+	@sh -c "'$(CURDIR)/scripts/gofmtcheck'"
 
-# Docker
+.NOTPARALLEL:
 
-docker-test:
-	@docker-compose build heimdall
-	@docker-compose run --rm heimdall sh -c 'sleep 1 && make test'
-
-docker-release:
-	@docker-compose build heimdall
-	@docker-compose run --rm heimdall sh -c 'godep restore && make release'
-
-.PHONY: all test release docker-test docker-release
+.PHONY: cover default fmt fmtcheck test testrace 
