@@ -1,3 +1,7 @@
+## 1.1.0
+
+- Upgrade to Go 1.17 and project dependencies.
+
 ## 1.0.0
 
 - Upgrade to Go 1.15 and project dependencies.
