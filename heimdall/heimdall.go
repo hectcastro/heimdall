@@ -25,15 +25,14 @@ type Lock struct {
 func New(database, namespace, name string) (lock *Lock, err error) {
 	db, err := sql.Open("postgres", database)
 	if err != nil {
-		err = errors.New("heimdall: unable to establish database connection")
+		return nil, errors.New("heimdall: unable to establish database connection")
 	}
 
 	return &Lock{
 		Database:  db,
 		Namespace: encode(namespace),
 		Name:      encode(name),
-	}, err
-
+	}, nil
 }
 
 // Acquire attempts to acquire a lock from PostgreSQL using
