@@ -152,3 +152,22 @@ func TestLibPqEnvironment(t *testing.T) {
 		t.Errorf("Unable to acquire lock")
 	}
 }
+
+func TestNewWithUnreachableDatabase(t *testing.T) {
+	namespace := uuid.New().String()
+	name := uuid.New().String()
+
+	// Use a valid connection string format but unreachable host
+	// Port 54321 should not have PostgreSQL running
+	unreachableURL := "postgres://postgres:heimdall@localhost:54321/test?sslmode=disable"
+
+	lock, err := New(unreachableURL, namespace, name)
+
+	if err == nil {
+		t.Error("Expected error when connecting to unreachable database, got nil")
+	}
+
+	if lock != nil {
+		t.Errorf("Expected nil lock when connection fails, got non-nil lock")
+	}
+}

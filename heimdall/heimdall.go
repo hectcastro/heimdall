@@ -28,6 +28,12 @@ func New(database, namespace, name string) (lock *Lock, err error) {
 		return nil, errors.New("heimdall: unable to establish database connection")
 	}
 
+	// Verify connection actually works
+	if err := db.Ping(); err != nil {
+		db.Close() // Clean up the connection pool
+		return nil, errors.New("heimdall: unable to connect to database")
+	}
+
 	return &Lock{
 		Database:  db,
 		Namespace: encode(namespace),
