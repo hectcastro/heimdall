@@ -1,3 +1,8 @@
+## 1.2.1
+
+- Fix deprecated goreleaser --rm-dist flag (now --clean).
+- Remove deprecated archives.replacements from goreleaser configuration.
+
 ## 1.2.0
 
 - Upgrade to Go 1.25 and project dependencies.
