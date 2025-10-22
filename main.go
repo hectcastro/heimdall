@@ -25,6 +25,10 @@ const (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	var debug bool
 	var database, namespace, name string
 	var timeout int
@@ -48,7 +52,8 @@ func main() {
 	}
 
 	if len(args) == 0 {
-		exitError(errors.New("heimdall: you must supply a program to run"))
+		fmt.Fprint(os.Stderr, errors.New("heimdall: you must supply a program to run"))
+		return 1
 	}
 
 	program := args[0]
@@ -63,23 +68,25 @@ func main() {
 
 	lock, err := heimdall.New(database, namespace, name)
 	if err != nil {
-		exitError(err)
+		fmt.Fprint(os.Stderr, err)
+		return 1
 	}
 
 	lockAcquired, err := lock.Acquire()
 	if err != nil {
-		exitError(err)
+		fmt.Fprint(os.Stderr, err)
+		return 1
 	}
 	defer lock.Release()
 
 	if lockAcquired {
 		log.Debug("Lock was acquired")
 
-		os.Exit(Run(program, programArgs, timeout))
+		return Run(program, programArgs, timeout)
 	} else {
 		log.Debug("Lock was not acquired")
 
-		os.Exit(1)
+		return 1
 	}
 }
 
@@ -95,7 +102,8 @@ func Run(program string, args []string, timeout int) int {
 	cmd.Stderr = &cmdErr
 
 	if err := cmd.Start(); err != nil {
-		exitError(err)
+		log.Error(err)
+		return 1
 	}
 
 	done := make(chan error, 1)
@@ -141,14 +149,6 @@ func timeoutDuration(timeout int) time.Duration {
 	}
 
 	return time.Duration(timeout) * time.Second
-}
-
-// exitError is a convenience function for printing an error
-// message to Stderr and returning 1 as the program's exit status.
-func exitError(err error) {
-	fmt.Fprint(os.Stderr, err)
-
-	os.Exit(1)
 }
 
 // usage returns the usage text for this program's command line

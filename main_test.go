@@ -27,3 +27,11 @@ func TestTimeout(t *testing.T) {
 		t.Errorf("Timeout didn't kill process")
 	}
 }
+
+func TestNonexistentCommand(t *testing.T) {
+	exitStatus := Run("this-command-definitely-does-not-exist", []string{}, DefaultLockTimeout)
+
+	if exitStatus != 1 {
+		t.Errorf("Nonexistent command should return exit status 1, got %d", exitStatus)
+	}
+}
