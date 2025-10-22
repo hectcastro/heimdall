@@ -159,7 +159,7 @@ func usage() string {
 	helpText := `
 Usage: heimdall [options] PROGRAM
 
-  Run a proram with an exclusive lock acquired from PostgreSQL
+  Run a program with an exclusive lock acquired from PostgreSQL
 
 Options:
 
