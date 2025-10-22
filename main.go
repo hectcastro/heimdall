@@ -126,7 +126,11 @@ func Run(program string, args []string, timeout int) int {
 			exitStatus = cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
 		}
 	case <-time.After(timeoutDuration(timeout)):
-		cmd.Process.Kill()
+		if cmd.Process != nil {
+			if err := cmd.Process.Kill(); err != nil {
+				log.Debug(fmt.Sprintf("Failed to kill process: %v", err))
+			}
+		}
 		<-done
 
 		log.Debug("Process killed due to timeout")
