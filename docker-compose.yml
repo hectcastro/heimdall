@@ -1,8 +1,0 @@
-version: "3"
-services:
-  db:
-    image: postgres:13
-    environment:
-      POSTGRES_PASSWORD: heimdall
-    ports:
-      - 5432:5432
