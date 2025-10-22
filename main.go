@@ -135,6 +135,9 @@ func Run(program string, args []string, timeout int) int {
 
 		log.Debug("Process killed due to timeout")
 
+		// Print any stderr output captured before timeout
+		fmt.Fprint(os.Stderr, cmdErr.String())
+
 		exitStatus = 1
 	}
 
