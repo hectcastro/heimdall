@@ -15,13 +15,13 @@ func TestAcquire(t *testing.T) {
 
 	lock, err := New(databaseURL, namespace, name)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err)
 	}
 	defer lock.Release()
 
 	lockAcquired, err := lock.Acquire()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err)
 	}
 
 	if !lockAcquired {
@@ -46,25 +46,25 @@ func TestLockContention(t *testing.T) {
 
 	lock, err := New(databaseURL, namespace, name)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err)
 	}
 	defer lock.Release()
 
 	lockAcquired, err := lock.Acquire()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err)
 	}
 
 	if lockAcquired {
 		secondLock, err := New(databaseURL, namespace, name)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err)
 		}
 		defer secondLock.Release()
 
 		secondLockAcquired, err := secondLock.Acquire()
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err)
 		}
 
 		if secondLockAcquired {
@@ -88,13 +88,13 @@ func TestLibPqEnvironment(t *testing.T) {
 
 	lock, err := New("", namespace, name)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err)
 	}
 	defer lock.Release()
 
 	lockAcquired, err := lock.Acquire()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err)
 	}
 
 	if !lockAcquired {
