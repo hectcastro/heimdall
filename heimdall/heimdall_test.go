@@ -1,19 +1,62 @@
 package heimdall
 
 import (
+	"context"
+	"log"
 	"net/url"
 	"os"
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
+var testDatabaseURL string
+
+func TestMain(m *testing.M) {
+	ctx := context.Background()
+
+	// Start PostgreSQL container
+	postgresContainer, err := postgres.Run(ctx,
+		"postgres:17",
+		postgres.WithDatabase("test"),
+		postgres.WithUsername("postgres"),
+		postgres.WithPassword("heimdall"),
+		testcontainers.WithWaitStrategy(
+			wait.ForLog("database system is ready to accept connections").
+				WithOccurrence(2),
+		),
+	)
+	if err != nil {
+		log.Fatalf("Failed to start PostgreSQL container: %v", err)
+	}
+
+	// Get connection string
+	connStr, err := postgresContainer.ConnectionString(ctx, "sslmode=disable")
+	if err != nil {
+		log.Fatalf("Failed to get connection string: %v", err)
+	}
+
+	testDatabaseURL = connStr
+
+	// Run tests
+	code := m.Run()
+
+	// Cleanup
+	if err := testcontainers.TerminateContainer(postgresContainer); err != nil {
+		log.Fatalf("Failed to terminate container: %v", err)
+	}
+
+	os.Exit(code)
+}
+
 func TestAcquire(t *testing.T) {
-	databaseURL := os.Getenv("DATABASE_URL")
 	namespace := uuid.New().String()
 	name := uuid.New().String()
 
-	lock, err := New(databaseURL, namespace, name)
+	lock, err := New(testDatabaseURL, namespace, name)
 	if err != nil {
 		t.Error(err)
 	}
@@ -40,11 +83,10 @@ func TestEncode(t *testing.T) {
 }
 
 func TestLockContention(t *testing.T) {
-	databaseURL := os.Getenv("DATABASE_URL")
 	namespace := uuid.New().String()
 	name := uuid.New().String()
 
-	lock, err := New(databaseURL, namespace, name)
+	lock, err := New(testDatabaseURL, namespace, name)
 	if err != nil {
 		t.Error(err)
 	}
@@ -56,7 +98,7 @@ func TestLockContention(t *testing.T) {
 	}
 
 	if lockAcquired {
-		secondLock, err := New(databaseURL, namespace, name)
+		secondLock, err := New(testDatabaseURL, namespace, name)
 		if err != nil {
 			t.Error(err)
 		}
@@ -77,10 +119,19 @@ func TestLibPqEnvironment(t *testing.T) {
 	namespace := uuid.New().String()
 	name := uuid.New().String()
 
-	dbURL, _ := url.Parse(os.Getenv("DATABASE_URL"))
+	dbURL, _ := url.Parse(testDatabaseURL)
 
-	os.Setenv("PGHOST", dbURL.Host)
+	// Split host and port
+	host := dbURL.Hostname()
+	port := dbURL.Port()
+
+	os.Setenv("PGHOST", host)
+	if port != "" {
+		os.Setenv("PGPORT", port)
+	}
 	os.Setenv("PGUSER", dbURL.User.Username())
+	password, _ := dbURL.User.Password()
+	os.Setenv("PGPASSWORD", password)
 	os.Setenv("PGDATABASE", dbURL.Path[1:len(dbURL.Path)])
 
 	params, _ := url.ParseQuery(dbURL.RawQuery)
