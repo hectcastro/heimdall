@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -32,10 +31,6 @@ func run() int {
 	var debug bool
 	var database, namespace, name string
 	var timeout int
-
-	if os.Getenv("GOMAXPROCS") == "" {
-		runtime.GOMAXPROCS(runtime.NumCPU())
-	}
 
 	flag.Usage = func() { fmt.Print(usage()) }
 	flag.BoolVar(&debug, "debug", false, "Debug mode enabled")
