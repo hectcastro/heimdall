@@ -1,3 +1,11 @@
+## 1.2.0
+
+- Upgrade to Go 1.25 and project dependencies.
+- Replace GitHub Actions PostgreSQL service with testcontainers-go for test isolation.
+- Fix deferred lock.Release() not executing when using os.Exit().
+- Fix New() returning non-nil Lock with nil Database field on sql.Open() error.
+- Add database connection verification with db.Ping() after sql.Open().
+
 ## 1.1.0
 
 - Upgrade to Go 1.17 and project dependencies.

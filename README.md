@@ -60,11 +60,13 @@ $ heimdall \
 
 ### Local
 
-The local tests require a PostgreSQL database connection fed to the test suite as a connection string via the `DATABASE_URL` environment variable:
+The local tests use [testcontainers-go](https://golang.testcontainers.org) to automatically spin up a PostgreSQL container during test execution. Simply run:
 
 ```bash
-$ DATABASE_URL="postgres://postgres@localhost/postgres?sslmode=disable" make test
+$ make test
 ```
+
+Docker must be running on your system for the tests to execute successfully.
 
 ## Attribution
 
