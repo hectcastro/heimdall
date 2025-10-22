@@ -1,3 +1,7 @@
+## Unreleased
+
+- Update goreleaser configuration to version 2 format.
+
 ## 1.2.1
 
 - Fix deprecated goreleaser --rm-dist flag (now --clean).
