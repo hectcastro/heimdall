@@ -1,4 +1,4 @@
-## Unreleased
+## 2.0.0
 
 - **BREAKING**: Add context.Context support to all database operations (New() and Acquire()).
 - Add signal handling (SIGTERM/SIGINT) to ensure locks are released cleanly on interrupt.
