@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **BREAKING**: Add context.Context support to all database operations (New() and Acquire()).
+- Refactor Acquire() to use QueryRow instead of Query for single-row queries.
 - Update goreleaser configuration to version 2 format.
 
 ## 1.2.1

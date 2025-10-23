@@ -53,16 +53,17 @@ func TestMain(m *testing.M) {
 }
 
 func TestAcquire(t *testing.T) {
+	ctx := context.Background()
 	namespace := uuid.New().String()
 	name := uuid.New().String()
 
-	lock, err := New(testDatabaseURL, namespace, name)
+	lock, err := New(ctx, testDatabaseURL, namespace, name)
 	if err != nil {
 		t.Error(err)
 	}
 	defer lock.Release()
 
-	lockAcquired, err := lock.Acquire()
+	lockAcquired, err := lock.Acquire(ctx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -83,28 +84,29 @@ func TestEncode(t *testing.T) {
 }
 
 func TestLockContention(t *testing.T) {
+	ctx := context.Background()
 	namespace := uuid.New().String()
 	name := uuid.New().String()
 
-	lock, err := New(testDatabaseURL, namespace, name)
+	lock, err := New(ctx, testDatabaseURL, namespace, name)
 	if err != nil {
 		t.Error(err)
 	}
 	defer lock.Release()
 
-	lockAcquired, err := lock.Acquire()
+	lockAcquired, err := lock.Acquire(ctx)
 	if err != nil {
 		t.Error(err)
 	}
 
 	if lockAcquired {
-		secondLock, err := New(testDatabaseURL, namespace, name)
+		secondLock, err := New(ctx, testDatabaseURL, namespace, name)
 		if err != nil {
 			t.Error(err)
 		}
 		defer secondLock.Release()
 
-		secondLockAcquired, err := secondLock.Acquire()
+		secondLockAcquired, err := secondLock.Acquire(ctx)
 		if err != nil {
 			t.Error(err)
 		}
@@ -116,6 +118,7 @@ func TestLockContention(t *testing.T) {
 }
 
 func TestLibPqEnvironment(t *testing.T) {
+	ctx := context.Background()
 	namespace := uuid.New().String()
 	name := uuid.New().String()
 
@@ -137,13 +140,13 @@ func TestLibPqEnvironment(t *testing.T) {
 	params, _ := url.ParseQuery(dbURL.RawQuery)
 	os.Setenv("PGSSLMODE", params["sslmode"][0])
 
-	lock, err := New("", namespace, name)
+	lock, err := New(ctx, "", namespace, name)
 	if err != nil {
 		t.Error(err)
 	}
 	defer lock.Release()
 
-	lockAcquired, err := lock.Acquire()
+	lockAcquired, err := lock.Acquire(ctx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -154,6 +157,7 @@ func TestLibPqEnvironment(t *testing.T) {
 }
 
 func TestNewWithUnreachableDatabase(t *testing.T) {
+	ctx := context.Background()
 	namespace := uuid.New().String()
 	name := uuid.New().String()
 
@@ -161,7 +165,7 @@ func TestNewWithUnreachableDatabase(t *testing.T) {
 	// Port 54321 should not have PostgreSQL running
 	unreachableURL := "postgres://postgres:heimdall@localhost:54321/test?sslmode=disable"
 
-	lock, err := New(unreachableURL, namespace, name)
+	lock, err := New(ctx, unreachableURL, namespace, name)
 
 	if err == nil {
 		t.Error("Expected error when connecting to unreachable database, got nil")

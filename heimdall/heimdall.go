@@ -3,6 +3,7 @@
 package heimdall
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -22,14 +23,14 @@ type Lock struct {
 
 // New establishes a connection to the PostgreSQL database with a
 // connection string and creates a Lock.
-func New(database, namespace, name string) (lock *Lock, err error) {
+func New(ctx context.Context, database, namespace, name string) (lock *Lock, err error) {
 	db, err := sql.Open("postgres", database)
 	if err != nil {
 		return nil, errors.New("heimdall: unable to establish database connection")
 	}
 
 	// Verify connection actually works
-	if err := db.Ping(); err != nil {
+	if err := db.PingContext(ctx); err != nil {
 		db.Close() // Clean up the connection pool
 		return nil, errors.New("heimdall: unable to connect to database")
 	}
@@ -43,19 +44,12 @@ func New(database, namespace, name string) (lock *Lock, err error) {
 
 // Acquire attempts to acquire a lock from PostgreSQL using
 // `pg_try_advisory_lock`.
-func (l *Lock) Acquire() (lockStatus bool, err error) {
+func (l *Lock) Acquire(ctx context.Context) (lockStatus bool, err error) {
 	var lockAcquired bool
 
-	rows, err := l.Database.Query("SELECT pg_try_advisory_lock($1,$2)", l.Namespace, l.Name)
+	err = l.Database.QueryRowContext(ctx, "SELECT pg_try_advisory_lock($1,$2)", l.Namespace, l.Name).Scan(&lockAcquired)
 	if err != nil {
 		return false, errors.New("heimdall: unable to execute query for advisory lock")
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		if err := rows.Scan(&lockAcquired); err != nil {
-			return false, errors.New("heimdall: unable to scan query results")
-		}
 	}
 
 	log.Debug(fmt.Sprintf("Lock acquired?: %v", lockAcquired))

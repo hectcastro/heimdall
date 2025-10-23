@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -61,13 +62,15 @@ func run() int {
 	log.Debug(fmt.Sprintf("Program: %v", program))
 	log.Debug(fmt.Sprintf("Program arguments: %v", programArgs))
 
-	lock, err := heimdall.New(database, namespace, name)
+	ctx := context.Background()
+
+	lock, err := heimdall.New(ctx, database, namespace, name)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		return 1
 	}
 
-	lockAcquired, err := lock.Acquire()
+	lockAcquired, err := lock.Acquire(ctx)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		return 1
