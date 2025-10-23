@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
 	"syscall"
 	"time"
@@ -75,27 +76,74 @@ func run() int {
 		fmt.Fprint(os.Stderr, err)
 		return 1
 	}
-	defer lock.Release()
+
+	// Set up signal handling for clean lock release
+	ctx, cancel := context.WithCancel(context.Background())
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Ensure cleanup on exit
+	exitCode := 0
+	lockReleased := false
+
+	// Handle signals in background
+	go func() {
+		sig := <-sigChan
+		log.Debug(fmt.Sprintf("Received signal: %v", sig))
+
+		// Cancel context to stop child process
+		cancel()
+
+		// Release lock explicitly
+		if !lockReleased {
+			lock.Release()
+			lockReleased = true
+			log.Debug("Lock released due to signal")
+		}
+
+		// Exit with signal-specific code (128 + signal number)
+		if sig == syscall.SIGTERM {
+			exitCode = 143 // 128 + 15
+		} else if sig == syscall.SIGINT {
+			exitCode = 130 // 128 + 2
+		}
+	}()
 
 	if lockAcquired {
 		log.Debug("Lock was acquired")
 
-		return Run(program, programArgs, timeout)
+		exitCode = RunWithContext(ctx, program, programArgs, timeout)
 	} else {
 		log.Debug("Lock was not acquired")
-
-		return 1
+		exitCode = 1
 	}
+
+	// Ensure lock is released
+	if !lockReleased {
+		lock.Release()
+		lockReleased = true
+	}
+
+	// Stop signal notifications
+	signal.Stop(sigChan)
+
+	return exitCode
 }
 
 // Run executes a program and returns its exit status. Its
 // arguments are a program, an array of arguments to that
 // program, and a timeout.
 func Run(program string, args []string, timeout int) int {
+	return RunWithContext(context.Background(), program, args, timeout)
+}
+
+// RunWithContext executes a program with context support and returns its exit status.
+// The context can be used to cancel the command execution.
+func RunWithContext(ctx context.Context, program string, args []string, timeout int) int {
 	var exitStatus int
 	var cmdOut, cmdErr bytes.Buffer
 
-	cmd := exec.Command(program, args...)
+	cmd := exec.CommandContext(ctx, program, args...)
 	cmd.Stdout = &cmdOut
 	cmd.Stderr = &cmdErr
 
@@ -123,6 +171,20 @@ func Run(program string, args []string, timeout int) int {
 			// The command's successful exit status
 			exitStatus = cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
 		}
+	case <-ctx.Done():
+		// Context was cancelled (e.g., due to signal)
+		if cmd.Process != nil {
+			if err := cmd.Process.Kill(); err != nil {
+				log.Debug(fmt.Sprintf("Failed to kill process: %v", err))
+			}
+		}
+		<-done
+
+		log.Debug("Process killed due to context cancellation")
+
+		fmt.Fprint(os.Stderr, cmdErr.String())
+
+		exitStatus = 1
 	case <-time.After(timeoutDuration(timeout)):
 		if cmd.Process != nil {
 			if err := cmd.Process.Kill(); err != nil {

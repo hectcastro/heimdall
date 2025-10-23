@@ -1,6 +1,8 @@
 ## Unreleased
 
 - **BREAKING**: Add context.Context support to all database operations (New() and Acquire()).
+- Add signal handling (SIGTERM/SIGINT) to ensure locks are released cleanly on interrupt.
+- Add RunWithContext() to support context-based cancellation of child processes.
 - Refactor Acquire() to use QueryRow instead of Query for single-row queries.
 - Update goreleaser configuration to version 2 format.
 
