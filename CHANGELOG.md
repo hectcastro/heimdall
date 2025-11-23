@@ -1,3 +1,8 @@
+## 2.0.1
+
+- Update `golang.org/x/crypto` to v0.45.0.
+- CI: update GitHub Actions workflows (actions/checkout v6, github/codeql-action v4) and keep runners on ubuntu-latest.
+
 ## 2.0.0
 
 - **BREAKING**: Add context.Context support to all database operations (New() and Acquire()).
