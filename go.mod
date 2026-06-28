@@ -7,7 +7,7 @@ require (
 	github.com/lib/pq v1.12.3
 	github.com/sirupsen/logrus v1.9.4
 	github.com/testcontainers/testcontainers-go v0.43.0
-	github.com/testcontainers/testcontainers-go/modules/postgres v0.42.0
+	github.com/testcontainers/testcontainers-go/modules/postgres v0.43.0
 )
 
 require (
